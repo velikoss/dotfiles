@@ -1,7 +1,7 @@
 ---
 name: gost-uml
 description: "Enhancement of the GOST-DOCX skill that automatically detects when diagrams are needed in Russian academic documents and generates them using PlantUML. Triggers include: any GOST document request that mentions diagrams, block diagrams, flowcharts, algorithms, database schemas, class diagrams, sequence diagrams, ER diagrams, UML diagrams, or any visual representation of processes, structures, or data. Use this skill whenever creating GOST documents that would benefit from technical diagrams. This skill EXTENDS the gost-docx skill by adding automatic diagram generation capabilities."
-license: Proprietary
+license: Free to use. Created by Velikiy (velikoss) Kirill
 ---
 
 # GOST-UML: Automatic Diagram Generation for Russian Academic Papers
@@ -518,6 +518,144 @@ java -jar /home/claude/plantuml.jar /home/claude/er_diagram.puml
 - Flowcharts for algorithm steps
 - Activity diagrams for process flow
 - State diagrams for automata
+
+---
+
+## ГОСТ Block Diagram Rules (Блок-схемы по ГОСТ 19.701-90)
+
+> **ACTIVATE ONLY WHEN**: User explicitly requests a ГОСТ-compliant block diagram / блок-схема по ГОСТ / схема алгоритма по ГОСТ.
+
+When the user asks specifically for a **ГОСТ block diagram** (блок-схема алгоритма по ГОСТ), apply ALL of the following rules strictly. These override the generic flowchart pattern above.
+
+### Trigger Phrases
+
+Activate this rule set when the user writes any of:
+- "блок-схема по ГОСТ", "блок-схема алгоритма", "схема по ГОСТ 19.701"
+- "нарисуй блок-схему", "сделай блок-схему", "блок-схема алгоритма по ГОСТу"
+
+### ГОСТ 19.701-90 PlantUML Template
+
+```plantuml
+@startuml
+' ============================================================
+' ГОСТ 19.701-90 Block Diagram Rules
+' ============================================================
+
+' --- Font: Times New Roman, 12pt (mandatory for ГОСТ) ---
+skinparam defaultFontName "Times New Roman"
+skinparam defaultFontSize 12
+
+' --- No rounded corners on any rectangle (ГОСТ requires sharp corners) ---
+skinparam roundCorner 0
+skinparam ActivityDiamondBorderColor black
+skinparam ActivityBorderColor black
+skinparam ActivityBackgroundColor white
+skinparam ActivityBorderThickness 1
+
+' --- No shadows (clean ГОСТ look) ---
+skinparam shadowing false
+
+' --- Arrow style ---
+skinparam ArrowColor black
+skinparam ArrowThickness 1
+
+' --- START: Oval "Начало" (terminal block) ---
+start
+:Начало;
+
+' --- Process blocks: sharp rectangles ---
+:Ввод данных;
+
+' --- Decision block ---
+if (Условие?) then (да)
+  :Действие 1;
+else (нет)
+  :Действие 2;
+endif
+
+:Вывод результата;
+
+' --- END: Oval "Конец" (terminal block) ---
+:Конец;
+stop
+@enduml
+```
+
+### ГОСТ Block Diagram Rules (Mandatory)
+
+**1. Start / End Blocks — Oval Shape**
+- Use PlantUML `start` / `stop` keywords — they render as **ovals/rounded terminals** automatically in activity diagrams.
+- Label the start node explicitly `:Начало;` and end node `:Конец;` as the first/last action blocks.
+- Never skip labeling — ГОСТ requires readable "Начало" and "Конец" text inside terminals.
+
+**2. Font — Times New Roman**
+```plantuml
+skinparam defaultFontName "Times New Roman"
+skinparam defaultFontSize 12
+```
+- Use **Times New Roman 12pt** for ALL text inside blocks (matches ГОСТ document font standard).
+
+**3. Rectangles — No Rounded Corners**
+```plantuml
+skinparam roundCorner 0
+```
+- All process blocks (action rectangles) must have **sharp 90° corners**. No rounding allowed under ГОСТ.
+
+**4. No Overlapping Blocks**
+- Plan the diagram flow so blocks never visually overlap.
+- Use **vertical (top-to-bottom)** layout by default — PlantUML activity diagrams default to this.
+- For branches: use `if / else / endif` to split and rejoin cleanly — never manually position blocks that might collide.
+- Keep labels short to avoid box overflow: use 2-5 words per block.
+- If a branch has many steps, consider splitting into a sub-diagram and referencing it with a **predefined process block** (double-line sides).
+
+**5. Block Types by ГОСТ 19.701-90**
+
+| Block type         | ГОСТ shape          | PlantUML equivalent              |
+|--------------------|---------------------|----------------------------------|
+| Терминатор (Start/End) | Oval            | `start` / `stop`                 |
+| Процесс (Process)  | Sharp rectangle     | `:Действие;`                     |
+| Решение (Decision) | Rhombus/Diamond     | `if (Условие?) then ... endif`   |
+| Ввод/Вывод (I/O)   | Parallelogram       | Use note or label with "Ввод:"   |
+| Предопределённый процесс | Rectangle with double vertical lines | Use `partition` or note |
+
+**6. Complete Example — Algorithm with Decision**
+
+```plantuml
+@startuml
+skinparam defaultFontName "Times New Roman"
+skinparam defaultFontSize 12
+skinparam roundCorner 0
+skinparam shadowing false
+skinparam ActivityBorderColor black
+skinparam ActivityBackgroundColor white
+skinparam ArrowColor black
+
+start
+:Начало;
+:Ввод числа N;
+if (N > 0?) then (да)
+  :Вычислить корень;
+  :Вывести результат;
+else (нет)
+  :Вывести сообщение об ошибке;
+endif
+:Конец;
+stop
+@enduml
+```
+
+**7. Quality Checklist for ГОСТ Block Diagrams**
+
+- [ ] `start` / `stop` produce oval terminals with "Начало" / "Конец" labels
+- [ ] Font is Times New Roman 12pt (`skinparam defaultFontName "Times New Roman"`)
+- [ ] `skinparam roundCorner 0` — no rounded rectangles
+- [ ] `skinparam shadowing false` — no shadows
+- [ ] No blocks overlap (verified by reviewing PlantUML output PNG)
+- [ ] All text in Russian (except universal technical terms)
+- [ ] Arrows have direction labels on decision branches (да / нет)
+- [ ] Diagram is vertical (top-to-bottom flow)
+
+---
 
 ## Error Handling
 
