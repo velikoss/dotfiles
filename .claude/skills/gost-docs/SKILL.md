@@ -1,7 +1,7 @@
 ---
 name: gost-docx
 description: "Use this skill whenever the user wants to create, read, edit, or manipulate Word documents (.docx files) formatted according to Russian GOST academic standards (ГОСТ) for курсовая работа, ВКР, дипломная работа, or any Russian university paper. Triggers include: any mention of \"ГОСТ\", \"курсовая\", \"ВКР\", \"дипломная\", \"оформление по ГОСТу\", \"оформление работы\", \"Times New Roman 14\", \"полуторный интервал\", or requests to produce academic documents with Russian formatting standards. Also triggers when the user asks for a document with margins 30/10/20/20 mm, Times New Roman font, 1.5 line spacing, or section numbering like \"1.1\", \"1.1.1\". Use this skill even if the user just says \"оформи документ\" or \"сделай по ГОСТу\" without specifying exact standards. Do NOT use for non-Russian academic formatting (APA, MLA, Chicago) or general business documents."
-license: Proprietary. LICENSE.txt has complete terms
+license: Free to use. Created by Velikiy (velikoss) Kirill
 ---
 
 # GOST-Compliant DOCX Creation for Russian Academic Papers
@@ -93,16 +93,31 @@ sections: [{
 
 Pages are numbered with Arabic numerals, centered at the bottom of the page, continuous numbering including appendices.
 
+**ВАЖНО**: Титульная страница НЕ нумеруется (номер не отображается), но учитывается в общей нумерации. Для этого используется `differentFirstPage: true` в свойствах секции и пустой `first` footer.
+
 ```javascript
+// В properties секции добавь:
+properties: {
+  page: {
+    size: { width: 11906, height: 16838 },
+    margin: { top: 1134, bottom: 1134, left: 1701, right: 567 }
+  },
+  titlePage: true  // Включает differentFirstPage
+},
 footers: {
   default: new Footer({
     children: [new Paragraph({
       alignment: AlignmentType.CENTER,
       children: [new TextRun({ children: [PageNumber.CURRENT], font: "Times New Roman", size: 28 })]
     })]
+  }),
+  first: new Footer({
+    children: [new Paragraph({ children: [] })]  // Пустой footer — номер на титуле не отображается
   })
 }
 ```
+
+При использовании `titlePage: true` Word автоматически включает `w:titlePg` в XML секции, что активирует отдельный колонтитул для первой страницы. Нумерация продолжается с `2` на второй странице, что соответствует ГОСТ.
 
 ### Body Text Parameters (Основной текст)
 
@@ -651,6 +666,11 @@ new Paragraph({
     font: "Times New Roman", size: 24, bold: true
   })]
 })
+// ОБЯЗАТЕЛЬНО: пустой абзац после подписи рисунка (отступ после рисунка)
+new Paragraph({
+  spacing: { line: 360 },
+  children: []
+})
 ```
 
 ### Page Breaks
@@ -675,13 +695,15 @@ sections: [{
     page: {
       size: { width: 11906, height: 16838 },
       margin: { top: 1134, bottom: 1134, left: 1701, right: 567 }
-    }
+    },
+    titlePage: true  // Активирует особый колонтитул для первой страницы
   },
   footers: {
     default: new Footer({ children: [new Paragraph({
       alignment: AlignmentType.CENTER,
-      children: [new TextRun("Стр. "), new TextRun({ children: [PageNumber.CURRENT] })]
-    })] })
+      children: [new TextRun({ children: [PageNumber.CURRENT], font: "Times New Roman", size: 28 })]
+    })] }),
+    first: new Footer({ children: [new Paragraph({ children: [] })] })  // Пустой — нет номера на титуле
   },
   children: [/* content */]
 }]
@@ -695,7 +717,7 @@ sections: [{
 - **1.5 line spacing** for body text and headings (line: 360); single spacing for tables and captions (line: 240)
 - **First line indent 1.25 cm** (709 DXA) for body text and headings
 - **Justified alignment** for body text and most headings
-- **Page numbering** centered at bottom, Arabic numerals, continuous
+- **Page numbering** centered at bottom, Arabic numerals, continuous (except first page, it should have empty)
 - **No word hyphenation** — disable hyphenation
 - **Russian quotes «…»** — use `\u00AB` and `\u00BB` or XML entities
 - **Em-dash with spaces** for punctuation: `\u2014` (`—`)
@@ -709,6 +731,8 @@ sections: [{
 - **TOC requires HeadingLevel only** — no custom styles on heading paragraphs
 - **Override built-in styles** — use exact IDs: "Heading1", "Heading2", etc.
 - **Include `outlineLevel`** — required for TOC (0 for H1, 1 for H2, etc.)
+- **First page without page numbering** — Always use `titlePage: true` inside properties section and empty `first` footer, that should exclude page numbering from title page
+- **Empty paragraph after image** — after each `Paragraph` with text in format alike "Рисунок X.X — Описание" add `new Paragraph({ children: [] })` for spacing
 
 ---
 
